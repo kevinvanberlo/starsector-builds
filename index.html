@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Starsector Ship Builds</title>
+
+<style>
+body {
+    font-family: system-ui, sans-serif;
+    background: #0e0f13;
+    color: #e6e6e6;
+    margin: 0;
+}
+
+header {
+    padding: 16px;
+    background: #161821;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    background: #0e0f13;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 6px;
+}
+
+section {
+    padding: 20px;
+}
+
+.category {
+    margin-bottom: 40px;
+}
+
+.category h2 {
+    border-bottom: 2px solid #333;
+    padding-bottom: 6px;
+}
+
+.ship {
+    margin-top: 20px;
+}
+
+.ship h3 {
+    margin: 8px 0;
+}
+
+.images {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.images img {
+    max-width: 320px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #000;
+    cursor: zoom-in;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal.open {
+    display: flex;
+}
+
+.modal img {
+    max-width: 95vw;
+    max-height: 95vh;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: #000;
+}
+
+.modal::after {
+    content: "✕";
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 28px;
+    color: #fff;
+    cursor: pointer;
+    opacity: 0.8;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <input id="search" placeholder="Search ship or category..." />
+</header>
+
+<section id="content"></section>
+
+<!-- Modal -->
+<div id="modal" class="modal">
+    <img id="modal-img">
+</div>
+
+<script src="data.js"></script>
+<script>
+/* data.js must define: const DATA = {...} */
+const data = DATA;
+
+const content = document.getElementById("content");
+const modal = document.getElementById("modal");
+const modalImg = document.getElementById("modal-img");
+
+/* Build page */
+for (const category in data) {
+    const catDiv = document.createElement("div");
+    catDiv.className = "category";
+    catDiv.dataset.name = category.toLowerCase();
+
+    const h2 = document.createElement("h2");
+    h2.textContent = category.replace(/_/g, " ");
+    catDiv.appendChild(h2);
+
+    for (const ship in data[category]) {
+        const shipDiv = document.createElement("div");
+        shipDiv.className = "ship";
+        shipDiv.dataset.name = ship.toLowerCase();
+
+        const h3 = document.createElement("h3");
+        h3.textContent = ship.replace(/_/g, " ");
+        shipDiv.appendChild(h3);
+
+        const imgDiv = document.createElement("div");
+        imgDiv.className = "images";
+
+        for (const img of data[category][ship]) {
+            const i = document.createElement("img");
+            i.src = img;
+
+            i.addEventListener("click", () => openModal(img));
+            imgDiv.appendChild(i);
+        }
+
+        shipDiv.appendChild(imgDiv);
+        catDiv.appendChild(shipDiv);
+    }
+
+    content.appendChild(catDiv);
+}
+
+/* Search */
+document.getElementById("search").addEventListener("input", e => {
+    const q = e.target.value.toLowerCase();
+
+    document.querySelectorAll(".category").forEach(cat => {
+        let visible = false;
+
+        cat.querySelectorAll(".ship").forEach(ship => {
+            const match =
+                ship.dataset.name.includes(q) ||
+                cat.dataset.name.includes(q);
+
+            ship.classList.toggle("hidden", !match);
+            if (match) visible = true;
+        });
+
+        cat.classList.toggle("hidden", !visible);
+    });
+});
+
+/* Modal logic */
+function openModal(src) {
+    modalImg.src = src;
+    modal.classList.add("open");
+}
+
+modal.addEventListener("click", () => {
+    modal.classList.remove("open");
+    modalImg.src = "";
+});
+
+document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+        modal.classList.remove("open");
+        modalImg.src = "";
+    }
+});
+</script>
+
+</body>
+</html>
