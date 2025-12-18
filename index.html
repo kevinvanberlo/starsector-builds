@@ -127,6 +127,29 @@ const content = document.getElementById("content");
 const modal = document.getElementById("modal");
 const modalImg = document.getElementById("modal-img");
 
+function createImageWithFallback(localPath) {
+    const img = document.createElement("img");
+
+    // Extract filename (e.g. 4pR6wBg.png)
+    const filename = localPath.split("/").pop();
+
+    // Imgur URL (same filename)
+    const imgurUrl = "https://i.imgur.com/" + filename;
+
+    img.src = imgurUrl;
+    img.loading = "lazy";
+    img.style.cursor = "zoom-in";
+
+    img.onerror = () => {
+        img.onerror = null;      // prevent infinite loop
+        img.src = localPath;     // fallback to local file
+    };
+
+    img.addEventListener("click", () => openModal(img.src));
+
+    return img;
+}
+
 /* Build page */
 for (const category in data) {
     const catDiv = document.createElement("div");
@@ -149,13 +172,10 @@ for (const category in data) {
         const imgDiv = document.createElement("div");
         imgDiv.className = "images";
 
-        for (const img of data[category][ship]) {
-            const i = document.createElement("img");
-            i.src = img;
-
-            i.addEventListener("click", () => openModal(img));
-            imgDiv.appendChild(i);
-        }
+        for (const localPath of data[category][ship]) {
+		const img = createImageWithFallback(localPath);
+		imgDiv.appendChild(img);
+}
 
         shipDiv.appendChild(imgDiv);
         catDiv.appendChild(shipDiv);
