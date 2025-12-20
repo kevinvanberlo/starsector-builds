@@ -5,103 +5,148 @@
 <title>Starsector Ship Builds</title>
 
 <style>
-body {
-    font-family: system-ui, sans-serif;
-    background: #0e0f13;
-    color: #e6e6e6;
-    margin: 0;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
+body {
+  font-family: system-ui, sans-serif;
+  background: #0e0f13;
+  color: #e6e6e6;
+  margin: 0;
+}
+
+/* Header */
 header {
-    padding: 16px;
-    background: #161821;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+  padding: 16px;
+  background: #161821;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 input {
-	width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    background: #0e0f13;
-    color: #fff;
-    border: 1px solid #333;
-    border-radius: 6px;
-	box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  background: #0e0f13;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 6px;
 }
 
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #161821;
+}
+
+.tab {
+  background: #0e0f13;
+  color: #fff;
+  border: 1px solid #333;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #2a2d3a;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Content */
 section {
-    padding: 20px;
+  padding: 20px;
 }
 
 .category {
-    margin-bottom: 40px;
+  margin-bottom: 40px;
 }
 
 .category h2 {
-    border-bottom: 2px solid #333;
-    padding-bottom: 6px;
+  border-bottom: 2px solid #333;
+  padding-bottom: 6px;
 }
 
 .ship {
-    margin-top: 20px;
+  margin-top: 20px;
 }
 
 .ship h3 {
-    margin: 8px 0;
+  margin: 8px 0;
 }
 
 .images {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .images img {
-    max-width: 320px;
-    border-radius: 6px;
-    border: 1px solid #333;
-    background: #000;
-    cursor: zoom-in;
+  max-width: 320px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #000;
+  cursor: zoom-in;
 }
 
 .hidden {
-    display: none;
+  display: none;
+}
+
+.tier {
+  margin-left: 8px;
+  font-weight: bold;
+  color: #ffd369;
+}
+
+.desc {
+  margin: 6px 0 12px;
+  max-width: 800px;
+  line-height: 1.5;
+}
+
+.toggle {
+  margin-left: 10px;
+  font-size: 12px;
+  background: none;
+  border: none;
+  color: #7aa2f7;
+  cursor: pointer;
 }
 
 /* Modal */
 .modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.85);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
 }
 
 .modal.open {
-    display: flex;
+  display: flex;
 }
 
 .modal img {
-    max-width: 95vw;
-    max-height: 95vh;
-    border-radius: 8px;
-    border: 1px solid #444;
-    background: #000;
-}
-
-.modal::after {
-    content: "✕";
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    font-size: 28px;
-    color: #fff;
-    cursor: pointer;
-    opacity: 0.8;
+  max-width: 95vw;
+  max-height: 95vh;
+  border-radius: 8px;
+  border: 1px solid #444;
 }
 </style>
 </head>
@@ -109,118 +154,197 @@ section {
 <body>
 
 <header>
-    <input id="search" placeholder="Search ship or category..." />
+  <input id="search" placeholder="Search ships or weapons..." />
 </header>
 
-<section id="content"></section>
+<nav class="tabs">
+  <button class="tab active" data-tab="ships">Ships</button>
+  <button class="tab" data-tab="weapons">Weapons</button>
+</nav>
 
-<!-- Modal -->
+<section id="ships" class="tab-content active"></section>
+<section id="weapons" class="tab-content"></section>
+
 <div id="modal" class="modal">
-    <img id="modal-img">
+  <img id="modal-img">
 </div>
 
 <script src="data.js"></script>
 <script>
-/* data.js must define: const DATA = {...} */
-const data = DATA;
+/* ================= DATA ================= */
 
-const content = document.getElementById("content");
+const SHIPS = DATA.SHIPS;
+const WEAPONS = DATA.WEAPONS;
+
+/* ================= MODAL ================= */
+
 const modal = document.getElementById("modal");
 const modalImg = document.getElementById("modal-img");
 
-function createImageWithFallback(localPath) {
-    const img = document.createElement("img");
-
-    // Extract filename (e.g. 4pR6wBg.png)
-    const filename = localPath.split("/").pop();
-
-    // Imgur URL (same filename)
-    const imgurUrl = "https://i.imgur.com/" + filename;
-
-    img.src = imgurUrl;
-    img.loading = "lazy";
-    img.style.cursor = "zoom-in";
-
-    img.onerror = () => {
-        img.onerror = null;      // prevent infinite loop
-        img.src = localPath;     // fallback to local file
-    };
-
-    img.addEventListener("click", () => openModal(img.src));
-
-    return img;
-}
-
-/* Build page */
-for (const category in data) {
-    const catDiv = document.createElement("div");
-    catDiv.className = "category";
-    catDiv.dataset.name = category.toLowerCase();
-
-    const h2 = document.createElement("h2");
-    h2.textContent = category.replace(/_/g, " ");
-    catDiv.appendChild(h2);
-
-    for (const ship in data[category]) {
-        const shipDiv = document.createElement("div");
-        shipDiv.className = "ship";
-        shipDiv.dataset.name = ship.toLowerCase();
-
-        const h3 = document.createElement("h3");
-        h3.textContent = ship.replace(/_/g, " ");
-        shipDiv.appendChild(h3);
-
-        const imgDiv = document.createElement("div");
-        imgDiv.className = "images";
-
-        for (const localPath of data[category][ship]) {
-		const img = createImageWithFallback(localPath);
-		imgDiv.appendChild(img);
-}
-
-        shipDiv.appendChild(imgDiv);
-        catDiv.appendChild(shipDiv);
-    }
-
-    content.appendChild(catDiv);
-}
-
-/* Search */
-document.getElementById("search").addEventListener("input", e => {
-    const q = e.target.value.toLowerCase();
-
-    document.querySelectorAll(".category").forEach(cat => {
-        let visible = false;
-
-        cat.querySelectorAll(".ship").forEach(ship => {
-            const match =
-                ship.dataset.name.includes(q) ||
-                cat.dataset.name.includes(q);
-
-            ship.classList.toggle("hidden", !match);
-            if (match) visible = true;
-        });
-
-        cat.classList.toggle("hidden", !visible);
-    });
-});
-
-/* Modal logic */
 function openModal(src) {
-    modalImg.src = src;
-    modal.classList.add("open");
+  modalImg.src = src;
+  modal.classList.add("open");
 }
 
 modal.addEventListener("click", () => {
-    modal.classList.remove("open");
-    modalImg.src = "";
+  modal.classList.remove("open");
+  modalImg.src = "";
 });
 
 document.addEventListener("keydown", e => {
-    if (e.key === "Escape") {
-        modal.classList.remove("open");
-        modalImg.src = "";
-    }
+  if (e.key === "Escape") {
+    modal.classList.remove("open");
+    modalImg.src = "";
+  }
+});
+
+/* ================= IMAGES ================= */
+
+function createImageWithFallback(localPath) {
+  const img = document.createElement("img");
+  const filename = localPath.split("/").pop();
+  const imgurUrl = "https://i.imgur.com/" + filename;
+
+  img.dataset.src = imgurUrl;
+  img.loading = "lazy";
+
+  img.onerror = () => {
+    img.onerror = null;
+    img.src = localPath;
+  };
+
+  img.addEventListener("click", () => openModal(img.src));
+  return img;
+}
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    entry.target.src = entry.target.dataset.src;
+    observer.unobserve(entry.target);
+  });
+});
+
+/* ================= TABS ================= */
+
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab, .tab-content")
+      .forEach(el => el.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
+
+/* ================= SHIPS ================= */
+
+const shipContainer = document.getElementById("ships");
+
+for (const category in SHIPS) {
+  const catDiv = document.createElement("div");
+  catDiv.className = "category";
+  catDiv.dataset.name = category.toLowerCase();
+  catDiv.innerHTML = `<h2>${category.replace(/_/g, " ")}</h2>`;
+
+  for (const shipName in SHIPS[category]) {
+    const shipData = SHIPS[category][shipName];
+
+    const shipDiv = document.createElement("div");
+    shipDiv.className = "ship";
+    shipDiv.dataset.name = shipName.toLowerCase();
+
+    shipDiv.innerHTML = `
+      <h3>
+        ${shipName.replace(/_/g, " ")}
+        <span class="tier">${shipData.tier ?? ""}</span>
+        <button class="toggle">Details</button>
+      </h3>
+      ${
+        shipData.description
+          ? `<p class="desc hidden">${shipData.description}</p>`
+          : ""
+      }
+    `;
+
+    const imgDiv = document.createElement("div");
+    imgDiv.className = "images";
+
+    (shipData.images || []).forEach(src => {
+      const img = createImageWithFallback(src);
+      observer.observe(img);
+      imgDiv.appendChild(img);
+    });
+
+    shipDiv.appendChild(imgDiv);
+    catDiv.appendChild(shipDiv);
+  }
+
+  shipContainer.appendChild(catDiv);
+}
+
+
+/* ================= WEAPONS ================= */
+
+const weaponContainer = document.getElementById("weapons");
+
+for (const type in WEAPONS) {
+  const typeDiv = document.createElement("div");
+  typeDiv.className = "category";
+  typeDiv.dataset.name = type.toLowerCase();
+  typeDiv.innerHTML = `<h2>${type} Weapons</h2>`;
+
+  for (const size in WEAPONS[type]) {
+    const sizeDiv = document.createElement("div");
+    sizeDiv.className = "category";
+    sizeDiv.dataset.name = size.toLowerCase();
+    sizeDiv.innerHTML = `<h3>${size}</h3>`;
+
+    WEAPONS[type][size].forEach(w => {
+      const div = document.createElement("div");
+      div.className = "ship";
+      div.dataset.name = w.name.toLowerCase();
+
+      div.innerHTML = `
+        <h3>
+          ${w.name}
+          <span class="tier">${w.tier}</span>
+          <button class="toggle">Details</button>
+        </h3>
+        <p class="desc hidden">${w.description}</p>
+      `;
+
+      sizeDiv.appendChild(div);
+    });
+
+    typeDiv.appendChild(sizeDiv);
+  }
+
+  weaponContainer.appendChild(typeDiv);
+}
+
+/* ================= TOGGLE ================= */
+
+document.addEventListener("click", e => {
+  if (!e.target.classList.contains("toggle")) return;
+  const desc = e.target.closest(".ship").querySelector(".desc");
+  desc.classList.toggle("hidden");
+  e.target.textContent = desc.classList.contains("hidden") ? "Details" : "Hide";
+});
+
+/* ================= SEARCH ================= */
+
+document.getElementById("search").addEventListener("input", e => {
+  const q = e.target.value.toLowerCase();
+
+  document.querySelectorAll(".ship").forEach(item => {
+    const name = item.dataset.name || "";
+    item.classList.toggle("hidden", !name.includes(q));
+  });
+
+  document.querySelectorAll(".category").forEach(cat => {
+    const hasVisible = cat.querySelector(".ship:not(.hidden)");
+    cat.classList.toggle("hidden", !hasVisible);
+  });
 });
 </script>
 
