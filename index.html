@@ -200,18 +200,10 @@ document.addEventListener("keydown", e => {
 
 /* ================= IMAGES ================= */
 
-function createImageWithFallback(localPath) {
+function createImage(localPath) {
   const img = document.createElement("img");
-  const filename = localPath.split("/").pop();
-  const imgurUrl = "https://i.imgur.com/" + filename;
-
-  img.dataset.src = imgurUrl;
+  img.dataset.src = localPath; // single source
   img.loading = "lazy";
-
-  img.onerror = () => {
-    img.onerror = null;
-    img.src = localPath;
-  };
 
   img.addEventListener("click", () => openModal(img.src));
   return img;
@@ -270,7 +262,7 @@ for (const category in SHIPS) {
     imgDiv.className = "images";
 
     (shipData.images || []).forEach(src => {
-      const img = createImageWithFallback(src);
+      const img = createImage(src);
       observer.observe(img);
       imgDiv.appendChild(img);
     });
